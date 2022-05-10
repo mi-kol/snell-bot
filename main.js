@@ -179,8 +179,18 @@ const snellify = async (data) => {
     let statEntries = Object.entries(stats).sort((a, b) => a[1].split(' ')[0] - b[1].split(' ')[0]); // 3
     console.log(statEntries);
 
-    let timeEntry = statEntries.findIndex(val => ['MINS', 'MIN', 'MINUTES', 'MINUTE', 'HOURS', 'HOUR'].includes(val[1].split(' ')[1].toUpperCase()))
-    
+    let timeEntry = -1;
+    timeEntry = statEntries.findIndex(val => 
+        {
+            let tgt = val[1].split(' ')
+            if (tgt.length > 1) {
+                return ['MINS', 'MIN', 'MINUTES', 'MINUTE', 'HOURS', 'HOUR'].includes(tgt[1].toUpperCase())
+            } else {
+                return false;
+            }
+        }
+    )
+
     if (timeEntry !== -1) {
         statEntries.push(statEntries.splice(timeEntry, 1)[0]);
     }
