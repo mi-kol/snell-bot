@@ -15,6 +15,17 @@ const quips = [
     'Solo carrying the Pelicans...'
 ]
 
+const introductionQuips = [
+    '0-time Hall of Famer',
+    'Summer League MVP',
+    'free throw legend',
+    'New Orleans Pelican',
+    'basketball player(?)',
+    '-',
+    'robotic',
+    'the trapped soul of'
+]
+
 client.once('ready', async () => {
     console.log('Ready!');
 
@@ -43,7 +54,7 @@ client.on('interactionCreate',  async interaction => {
         await interaction.reply('PONG');
     } else if (commandName === 'snellify') {
         await interaction.deferReply();
-        const loadingGif = new MessageAttachment(`./assets/loading/snell${grInt(1, 2)}.gif`)
+        const loadingGif = new MessageAttachment(`./assets/loading/snell${grInt(1, 6)}.gif`)
         await interaction.editReply({ content: quips[grInt(0, quips.length - 1)], files: [loadingGif], ephemeral: true})
         
         let canvReady = await snellify(interaction.options.data)
@@ -52,7 +63,7 @@ client.on('interactionCreate',  async interaction => {
         await wait(2500);
         
         await interaction.deleteReply();
-        await interaction.followUp({ files: [attachment], ephemeral: false, content: `Hey, it's me 0-time Hall of Famer Tony Snell. Here's the source for this image: \`\`\`${interaction.options.data.reduce((accumulator, curr) => accumulator + ` ${curr.name}: ${curr.value}`, '/snellify')} \`\`\` `});
+        await interaction.followUp({ files: [attachment], ephemeral: false, content: `Hey, it's me ${introductionQuips[grInt(0, introductionQuips.length - 1)]} Tony Snell. Here's the source for this image: \`\`\`${interaction.options.data.reduce((accumulator, curr) => accumulator + ` ${curr.name}: ${curr.value}`, '/snellify')} \`\`\` `});
     }
 })
 
