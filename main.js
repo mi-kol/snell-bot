@@ -4,6 +4,8 @@ const wait = require('node:timers/promises').setTimeout;
 Canvas.registerFont('./assets/snellify/Anton-Regular.ttf', { family: 'Anton' })
 require('dotenv').config();
 
+const fetch = require('cross-fetch');
+
 const client = new Client({ intents: [ Intents.FLAGS.GUILDS ]});
 
 const grInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -71,11 +73,68 @@ client.on('interactionCreate',  async interaction => {
 
         let yr = 2013 + grInt(0, 8)
 
-        fetch(`https://www.balldontlie.io/api/v1/season_averages?season=${yr}&player_ids[]=426`).then(rsp => rsp.json()).then(data => client.user.setActivity(`In ${yr}, Snell played ${data['games_played']} games.`))
+        fetch(`https://www.balldontlie.io/api/v1/season_averages?season=${yr}&player_ids[]=426`).then(rsp => rsp.json()).then(json => client.user.setActivity(snellTriviaHandler(json['data'][0], yr)))
     } else if (commandName === 'usagestats') {
         await interaction.reply(`Been used ${snellUsageStats} times since last restart.`)
     }
 })
+
+const snellTriviaHandler = (data, year) => {
+    let dataArray = Object.entries(data)
+    let templ = {
+        verb: '',
+        suffix: '',
+        pct: false,
+        default: false
+    }
+    const randomStat = dataArray[grInt(0, dataArray.length - 1)]
+    switch (randomStat[0]) {
+        default:
+        case 'games_played':
+            templ = { verb: 'played', suffix: 'games', default: true }
+            break;
+        case 'min':
+            templ = { verb: 'played', suffix: 'minutes per game'}
+            break;
+        case 'fga':
+            templ = { verb: 'made', suffix: 'field goals per game'}
+            break;
+        case 'fgm':
+            templ = { verb: 'attempted', suffix: 'field goals per game' }
+            break;
+        case 'fg3m':
+            templ = { verb: 'made', suffix: '3s per game'}
+            break;
+        case 'fg3a':
+            templ = { verb: 'attempted', suffix: 'field goals per game'}
+            break;
+        case 'ftm':
+            temp1 = { verb: 'made', suffix: 'free throws per game'}
+            break;
+        case 'fta':
+            temp1 = { verb: 'attempted', suffix: 'free throws per game'}
+            break;
+        case 'oreb':
+            temp1 = { verb: 'picked up', suffix: 'offensive rebounds per game'}
+            break;
+        case 'dreb':
+            templ = { verb: 'picked up', suffix: 'defense rebounds per game'}
+            break;
+        case 'reb':
+            templ = { verb: 'picked up', suffix: 'rebounds per game'}
+            break;
+        case 'pts':
+            templ = { verb: 'put up', suffix: 'points per game'}
+            break;
+        case 'ft_pct':
+            templ = { verb: 'kept a', suffix: 'free throw percentage', pct: true}
+            break;
+    } 
+
+    let statData = templ.pct ? `${parseFloat(randomStat[1]) * 100}%` : randomStat[1]
+
+    return `In ${year}, Snell ${templ.verb} ${templ.default ? data['games_played'] : statData} ${templ.suffix}.`
+}
 
 const snellify = async (data) => {
     ({ value: header } = data.find(elm => elm.name === 'name'));
