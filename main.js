@@ -1,5 +1,6 @@
 const { Client, Intents, MessageAttachment } = require('discord.js');
 const Canvas = require('canvas');
+const wait = require('node:timers/promises').setTimeout;
 Canvas.registerFont('./assets/snellify/Anton-Regular.ttf', { family: 'Anton' })
 require('dotenv').config();
 
@@ -14,8 +15,23 @@ const quips = [
     'Solo carrying the Pelicans...'
 ]
 
-client.once('ready', () => {
+client.once('ready', async () => {
     console.log('Ready!');
+
+    // let canvReady = await snellify([
+    //     { name: 'name', value: 'twinnee'},
+    //     { name: 'subtitle', value: '5/2/21 on split'},
+    //     { name: 'stat1', value: '0 dmg/round'},
+    //     { name: 'stat2', value: '0 bitches'},
+    //     { name: 'stat3', value: '0 value'},
+    //     { name: 'stat4', value: '17 deaths'},
+    //     { name: 'stat5', value: '3 kills'}
+    // ])
+    // const attachment = new MessageAttachment(canvReady.toBuffer(), 'snellllll.png');
+    // client.channels.cache.get('360490423044800514').send({
+    //     files: [attachment],
+    //     content: 'test'
+    // })
 })
 
 client.on('interactionCreate',  async interaction => {
@@ -23,18 +39,20 @@ client.on('interactionCreate',  async interaction => {
 
     const { commandName } = interaction;
 
-    if (commandName === 'ping') {
+    if (commandName === 'alive') {
         await interaction.reply('PONG');
-    } else if (commandName === 'user') {
-        await interaction.reply(`Your tag: ${interaction.user.tag}\nYour id: ${interaction.user.id}`)
     } else if (commandName === 'snellify') {
-        const loadingGif = new MessageAttachment(`https://snell.mikol.dev/snell${grInt(1, 2)}.gif`)
-        await interaction.reply({ content: quips[grInt(0, quips.length - 1)], files: [loadingGif], ephemeral: true})
+        await interaction.deferReply();
+        const loadingGif = new MessageAttachment(`./assets/loading/snell${grInt(1, 2)}.gif`)
+        await interaction.editReply({ content: quips[grInt(0, quips.length - 1)], files: [loadingGif], ephemeral: true})
         
         let canvReady = await snellify(interaction.options.data)
-        const attachment = new MessageAttachment(canvReady.toBuffer(), 'snelled.png');
+        const attachment = new MessageAttachment(canvReady.toBuffer(), `${interaction.options.getString('name')}_snelled.png`);
 
-        await interaction.followUp({ files: [attachment], ephemeral: false })
+        await wait(2500);
+        
+        await interaction.deleteReply();
+        await interaction.followUp({ files: [attachment], ephemeral: false, content: `Hey, it's me 0-time Hall of Famer Tony Snell. Here's the source for this image: \`\`\`${interaction.options.data.reduce((accumulator, curr) => accumulator + ` ${curr.name}: ${curr.value}`, '/snellify')} \`\`\` `});
     }
 })
 
@@ -46,7 +64,7 @@ const snellify = async (data) => {
         (accum, curr) => {
             if (!curr.name.startsWith('stat')) return accum;
             let { name, value } = curr;
-            return {...accum, [name]: value }
+            return {...accum, [name]: value.toUpperCase() }
         },
         {}
     )
@@ -56,27 +74,113 @@ const snellify = async (data) => {
     const background = await Canvas.loadImage('./assets/snellify/snell_base.png');
     ctx.drawImage(background, 0, 0, canvas.width, canvas.height);
 
-    ctx.font = '96px "Anton"';
     ctx.fillStyle = '#ffffff';
-
-    ctx.fillText(header, 20, 20, 300);
     ctx.textBaseline = 'top';
 
-    ctx.fillText(subheader, 20, 132, 200);
+    let headerFontData = findTextFontData(ctx, header.toUpperCase(), 290, 20, 20);
+    console.log(headerFontData)
+    ctx.font = `${headerFontData.size}px "Anton"`
+    ctx.fillText(header.toUpperCase(), headerFontData.leftOffset, headerFontData.topOffset);
+
+    let subheaderFontData = findTextFontData(ctx, subheader.toUpperCase(), 170, headerFontData.bottomBoundingBox + 10, 20 + headerFontData.cheatLeft, Math.round(headerFontData.size * 0.6))
+    console.log(subheaderFontData)
+    ctx.font = `${subheaderFontData.size}px "Anton"`
+    ctx.fillText(subheader.toUpperCase(), subheaderFontData.leftOffset, subheaderFontData.topOffset)
+
+    ctx.strokeStyle = '#ffffff'
+    ctx.lineWidth = 4
+    ctx.beginPath();
+    ctx.moveTo(20 + headerFontData.cheatLeft, subheaderFontData.bottomBoundingBox + 10)
+    ctx.lineTo(subheaderFontData.width + subheaderFontData.leftOffset, subheaderFontData.bottomBoundingBox + 10)
+    ctx.stroke();
     
-    let statI = 240
-    for (const [_, value] of Object.entries(stats)) {
+    let statEnd = 450;
+    console.log(Object.entries(stats))
+    let statEntries = Object.entries(stats).sort((a, b) => a[1].split(' ')[0] - b[1].split(' ')[0]); // 3
+    console.log(statEntries);
+
+    let timeEntry = statEntries.findIndex(val => ['MINS', 'MIN', 'MINUTES', 'MINUTE', 'HOURS', 'HOUR'].includes(val[1].split(' ')[1].toUpperCase()))
+    
+    if (timeEntry !== -1) {
+        statEntries.push(statEntries.splice(timeEntry, 1)[0]);
+    }
+    let padSpacePerLine = 15 / statEntries.length;
+    let statBegin = subheaderFontData.bottomBoundingBox + 35 + padSpacePerLine
+    let padSpace = (statEntries.length - 1) * padSpacePerLine;
+
+    let heightPerStatLine = (statEnd - statBegin) / statEntries.length
+
+    ctx.font = `${heightPerStatLine}px "Anton"`
+    ctx.textBaseline = 'bottom'
+    statBegin += heightPerStatLine;
+
+    let heightPixelTracker = statBegin;
+
+    // console.log(`${statBegin} - ${statEnd}:: ${statEntries} (and ${padSpace}) yields ${heightPerStatLine}`)
+
+    for (const [_, value] of statEntries) {
         let parsed = value.split(' ');
-        let num = parsed[0]
-        let txt = parsed.slice(1)
-        ctx.fillText(num, 20, statI);
-        ctx.font = '32px "Anton"';
-        ctx.fillText(txt, 60, statI + 40);
-        ctx.font = '96px "Anton"';
-        statI += 108;
+        let num = parsed[0];
+        let txt = parsed.slice(1).join(' ');
+
+        let numberPlacement = {x: 20 + headerFontData.cheatLeft, y: heightPixelTracker}
+
+        ctx.font = `${Math.min(heightPerStatLine, headerFontData.size * 1.4)}px "Anton"`;
+        let numberBBD = ctx.measureText(num)
+        // console.log(numberBBD);
+        ctx.fillText(num, numberPlacement.x, numberPlacement.y);
+        ctx.font = `${Math.min(heightPerStatLine * 0.4, subheaderFontData.size * 1.1)}px "Anton"`;
+        let txtBBD = ctx.measureText(txt)
+        let diffBBD = Math.abs(numberBBD.actualBoundingBoxDescent - txtBBD.actualBoundingBoxDescent);
+        // let diffABline = Math.abs(numberBBD.alphabeticBaseline - txtBBD.alphabeticBaseline)
+
+        let textPlacement = {x: numberPlacement.x + numberBBD.width + 8, y: heightPixelTracker}
+        // console.log(txtBBD)
+
+        ctx.fillText(txt, textPlacement.x, textPlacement.y - diffBBD - (txtBBD.alphabeticBaseline + txtBBD.actualBoundingBoxDescent));
+
+        heightPixelTracker += (heightPerStatLine + padSpace);
+
+        // console.log(`drew to ${numberPlacement.x}, ${numberPlacement.y} && ${textPlacement.x}, ${textPlacement.y}`)
     }
 
     return canvas;
+}
+
+const findTextFontData = (context, str, targetWidth, targetTopOffset, targetLeftOffset, startFont = 100) => {
+    let currentFont = startFont;
+    context.font = `${currentFont}px "Anton"`
+    let width = context.measureText(str).width;
+    while (width > targetWidth) {
+        context.font = `${--currentFont}px "Anton"`
+        width = context.measureText(str).width;
+    }
+
+    while (width < targetWidth) {
+        currentFont += 0.1;
+        context.font = `${currentFont}px "Anton"`;
+        width = context.measureText(str).width;
+        // console.log(currentFont)
+        if (width > targetWidth) {
+            currentFont -= 0.1;
+            context.font = `${currentFont}px "Anton"`;
+            // console.log(`yup ${currentFont}`)
+            break;
+        }
+    }
+
+    let final = context.measureText(str);
+    // console.log(final)
+    // console.log(`topOffset: ${targetTopOffset} + ${final.actualBoundingBoxAscent}`)
+
+    return {
+        size: currentFont,
+        topOffset: targetTopOffset + final.actualBoundingBoxAscent,
+        leftOffset: targetLeftOffset + final.actualBoundingBoxLeft,
+        bottomBoundingBox: targetTopOffset + final.actualBoundingBoxAscent + Math.round(final.actualBoundingBoxDescent),
+        width: final.width,
+        cheatLeft: 5
+    }
 }
 
 client.login(process.env.DISCORD_TOKEN)
