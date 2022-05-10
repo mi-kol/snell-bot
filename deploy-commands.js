@@ -15,7 +15,8 @@ const commands = [
         .addStringOption(opt => opt.setName('stat3').setDescription('Enter a stat line, delimited by a space. First section should be a number.'))
         .addStringOption(opt => opt.setName('stat4').setDescription('Enter a stat line, delimited by a space. First section should be a number.'))
         .addStringOption(opt => opt.setName('stat5').setDescription('Enter a stat line, delimited by a space. First section should be a number.'))
-        .addStringOption(opt => opt.setName('stat6').setDescription('Enter a stat line, delimited by a space. First section should be a number.'))
+        .addStringOption(opt => opt.setName('stat6').setDescription('Enter a stat line, delimited by a space. First section should be a number.')),
+    new SlashCommandBuilder().setName('usagestats').setDescription('how many times has this been used')
 ].map(cmd => cmd.toJSON());
 
 const rest = new REST({ version: '9' }).setToken(process.env.DISCORD_TOKEN)

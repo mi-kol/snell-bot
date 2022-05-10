@@ -26,6 +26,8 @@ const introductionQuips = [
     'the trapped soul of'
 ]
 
+let snellUsageStats = 0;
+
 client.once('ready', async () => {
     console.log('Ready!');
 
@@ -63,7 +65,15 @@ client.on('interactionCreate',  async interaction => {
         await wait(2500);
         
         await interaction.deleteReply();
-        await interaction.followUp({ files: [attachment], ephemeral: false, content: `Hey, it's me ${introductionQuips[grInt(0, introductionQuips.length - 1)]} Tony Snell. Here's the source for this image: \`\`\`${interaction.options.data.reduce((accumulator, curr) => accumulator + ` ${curr.name}: ${curr.value}`, '/snellify')} \`\`\` `});
+        await interaction.followUp({ files: [attachment], ephemeral: false, content: `Hey, it's me; ${introductionQuips[grInt(0, introductionQuips.length - 1)]} Tony Snell. Here's the source for this image: \`\`\`${interaction.options.data.reduce((accumulator, curr) => accumulator + ` ${curr.name}: ${curr.value}`, '/snellify')} \`\`\` `});
+
+        snellUsageStats++;
+
+        let yr = 2013 + grInt(0, 8)
+
+        fetch(`https://www.balldontlie.io/api/v1/season_averages?season=${yr}&player_ids[]=426`).then(rsp => rsp.json()).then(data => client.user.setActivity(`In ${yr}, Snell played ${data['games_played']} games.`))
+    } else if (commandName === 'usagestats') {
+        await interaction.reply(`Been used ${snellUsageStats} times since last restart.`)
     }
 })
 
