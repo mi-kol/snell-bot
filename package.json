@@ -1,0 +1,27 @@
+{
+  "name": "snell-bot",
+  "version": "1.0.0",
+  "description": "Tony Snell meme creation bot (for Discord).",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mi-kol/snell-bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mi-kol/snell-bot/issues"
+  },
+  "homepage": "https://github.com/mi-kol/snell-bot#readme",
+  "dependencies": {
+    "@discordjs/builders": "^0.13.0",
+    "@discordjs/rest": "^0.4.1",
+    "canvas": "^2.9.1",
+    "discord-api-types": "^0.32.1",
+    "discord.js": "^13.6.0",
+    "dotenv": "^16.0.0"
+  }
+}
