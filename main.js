@@ -64,10 +64,11 @@ client.on('interactionCreate',  async interaction => {
         let canvReady = await snellify(interaction.options.data)
         const attachment = new MessageAttachment(canvReady.toBuffer(), `${interaction.options.getString('name')}_snelled.png`);
 
+        // `Hey, it's me; ${introductionQuips[grInt(0, introductionQuips.length - 1)]} Tony Snell. Here's the source for this image: \`\`\`${interaction.options.data.reduce((accumulator, curr) => accumulator + ` ${curr.name}: ${curr.value}`, '/snellify')} \`\`\` `
+        
         await wait(2500);
         
-        await interaction.deleteReply();
-        await interaction.followUp({ files: [attachment], ephemeral: false, content: `Hey, it's me; ${introductionQuips[grInt(0, introductionQuips.length - 1)]} Tony Snell. Here's the source for this image: \`\`\`${interaction.options.data.reduce((accumulator, curr) => accumulator + ` ${curr.name}: ${curr.value}`, '/snellify')} \`\`\` `});
+        await interaction.editReply({ files: [attachment], ephemeral: false, content: '_ _'});
 
         snellUsageStats++;
 
