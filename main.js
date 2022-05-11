@@ -58,23 +58,27 @@ client.on('interactionCreate',  async interaction => {
         await interaction.reply('PONG');
     } else if (commandName === 'snellify') {
         await interaction.deferReply();
-        const loadingGif = new MessageAttachment(`./assets/loading/snell${grInt(1, 6)}.gif`)
-        await interaction.editReply({ content: quips[grInt(0, quips.length - 1)], files: [loadingGif], ephemeral: true})
-        
-        let canvReady = await snellify(interaction.options.data)
-        const attachment = new MessageAttachment(canvReady.toBuffer(), `${interaction.options.getString('name')}_snelled.png`);
+        try {
+            const loadingGif = new MessageAttachment(`./assets/loading/snell${grInt(1, 6)}.gif`)
+            await interaction.editReply({ content: quips[grInt(0, quips.length - 1)], files: [loadingGif], ephemeral: true})
+            
+            let canvReady = await snellify(interaction.options.data)
+            const attachment = new MessageAttachment(canvReady.toBuffer(), `${interaction.options.getString('name')}_snelled.png`);
 
-        // `Hey, it's me; ${introductionQuips[grInt(0, introductionQuips.length - 1)]} Tony Snell. Here's the source for this image: \`\`\`${interaction.options.data.reduce((accumulator, curr) => accumulator + ` ${curr.name}: ${curr.value}`, '/snellify')} \`\`\` `
-        
-        await wait(2500);
-        
-        await interaction.editReply({ files: [attachment], ephemeral: false, content: '_ _'});
+            // `Hey, it's me; ${introductionQuips[grInt(0, introductionQuips.length - 1)]} Tony Snell. Here's the source for this image: \`\`\`${interaction.options.data.reduce((accumulator, curr) => accumulator + ` ${curr.name}: ${curr.value}`, '/snellify')} \`\`\` `
+            
+            await wait(2500);
+            
+            await interaction.editReply({ files: [attachment], ephemeral: false, content: '_ _'});
 
-        snellUsageStats++;
+            snellUsageStats++;
 
-        let yr = 2013 + grInt(0, 8)
+            let yr = 2013 + grInt(0, 8)
 
-        fetch(`https://www.balldontlie.io/api/v1/season_averages?season=${yr}&player_ids[]=426`).then(rsp => rsp.json()).then(json => client.user.setActivity(snellTriviaHandler(json['data'][0], yr)))
+            fetch(`https://www.balldontlie.io/api/v1/season_averages?season=${yr}&player_ids[]=426`).then(rsp => rsp.json()).then(json => client.user.setActivity(snellTriviaHandler(json['data'][0], yr)))
+        } catch {
+            await interaction.editReply({ content: 'i bet it felt good to fuck up the bot huh. Now u gotta ping mex' })
+        }
     } else if (commandName === 'usagestats') {
         await interaction.reply(`Been used ${snellUsageStats} times since last restart.`)
     }
