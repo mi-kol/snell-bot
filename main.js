@@ -54,6 +54,8 @@ client.on('interactionCreate',  async interaction => {
 
     const { commandName } = interaction;
 
+    if (interaction.user.id === '818642728287207435') { interaction.reply('SHUT THE FUCK UP NERD!!!')}
+
     if (commandName === 'alive') {
         await interaction.reply('PONG');
     } else if (commandName === 'snellify') {
